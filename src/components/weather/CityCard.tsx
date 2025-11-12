@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import type { City } from '../../types';
 import { useAppSelector, useAppDispatch } from '../../hooks/useRedux';
 import { toggleFavorite } from '../../features/favorites/favoritesSlice';
+import { formatTemperature } from '../../utils';
 
 interface CityCardProps {
   city: City;
@@ -25,9 +26,6 @@ export const CityCard = ({ city, temperature, condition, icon }: CityCardProps) 
     e.preventDefault();
     dispatch(toggleFavorite(city.id));
   };
-
-  const unitSymbol = temperatureUnit === 'celsius' ? '°C' : 
-                     temperatureUnit === 'fahrenheit' ? '°F' : 'K';
   
   const iconUrl = icon ? `https://openweathermap.org/img/wn/${icon}@2x.png` : null;
 
@@ -65,7 +63,7 @@ export const CityCard = ({ city, temperature, condition, icon }: CityCardProps) 
             )}
             <div>
               <p className="text-3xl font-bold text-gray-800">
-                {Math.round(temperature)}{unitSymbol}
+                {temperature !== undefined && formatTemperature(temperature, temperatureUnit)}
               </p>
               <p className="text-sm text-gray-600 capitalize">{condition}</p>
             </div>

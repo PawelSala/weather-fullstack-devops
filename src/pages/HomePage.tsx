@@ -4,10 +4,12 @@ import { CityCard, SearchBar } from '../components/weather';
 import { LoadingSpinner } from '../components/common';
 import { DEFAULT_CITIES } from '../constants';
 import { fetchWeatherData } from '../services';
+import { useAppSelector } from '../hooks/useRedux';
 import type { City, WeatherData } from '../types';
 
 export const HomePage = () => {
   const navigate = useNavigate();
+  const temperatureUnit = useAppSelector(state => state.settings.temperatureUnit);
   const [weatherData, setWeatherData] = useState<Map<string, WeatherData>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchQuery] = useState('');
