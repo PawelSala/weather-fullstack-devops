@@ -28,6 +28,8 @@ export const CityCard = ({ city, temperature, condition, icon }: CityCardProps) 
 
   const unitSymbol = temperatureUnit === 'celsius' ? '°C' : 
                      temperatureUnit === 'fahrenheit' ? '°F' : 'K';
+  
+  const iconUrl = icon ? `https://openweathermap.org/img/wn/${icon}@2x.png` : null;
 
   return (
     <Link
@@ -52,7 +54,15 @@ export const CityCard = ({ city, temperature, condition, icon }: CityCardProps) 
       {temperature !== undefined && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-4xl">{icon || '☀️'}</span>
+            {iconUrl ? (
+              <img 
+                src={iconUrl} 
+                alt={condition || 'weather'} 
+                className="w-16 h-16"
+              />
+            ) : (
+              <span className="text-4xl">☀️</span>
+            )}
             <div>
               <p className="text-3xl font-bold text-gray-800">
                 {Math.round(temperature)}{unitSymbol}

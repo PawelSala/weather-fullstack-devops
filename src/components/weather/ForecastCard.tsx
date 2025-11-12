@@ -8,13 +8,18 @@ interface ForecastCardProps {
 
 export const ForecastCard = ({ forecast, unit }: ForecastCardProps) => {
   const date = formatDate(new Date(forecast.date).getTime() / 1000);
+  const iconUrl = `https://openweathermap.org/img/wn/${forecast.condition.icon}@2x.png`;
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow">
       <p className="text-sm font-semibold text-gray-600 mb-2">{date}</p>
       
       <div className="flex items-center justify-center mb-3">
-        <span className="text-4xl">{forecast.condition.icon || '☀️'}</span>
+        <img 
+          src={iconUrl} 
+          alt={forecast.condition.description}
+          className="w-16 h-16"
+        />
       </div>
       
       <p className="text-center text-sm text-gray-600 capitalize mb-2">

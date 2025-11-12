@@ -100,9 +100,11 @@ export const CityDetailsPage = () => {
         </div>
 
         <div className="flex items-center gap-6 mb-8">
-          <span className="text-8xl">
-            {weatherData.current.condition.icon || '☀️'}
-          </span>
+          <img 
+            src={`https://openweathermap.org/img/wn/${weatherData.current.condition.icon}@4x.png`}
+            alt={weatherData.current.condition.description}
+            className="w-32 h-32"
+          />
           <div>
             <p className="text-6xl font-bold text-gray-800">
               {formatTemperature(weatherData.current.temperature.current, temperatureUnit)}
