@@ -55,7 +55,6 @@ export const HomePage = () => {
   }, [navigate]);
 
   const handleSearchedCitySelect = useCallback((city: SearchedCity) => {
-    // Navigate to city details with query params for dynamic city
     const searchParams = new URLSearchParams({
       name: city.name,
       lat: city.coordinates.lat.toString(),

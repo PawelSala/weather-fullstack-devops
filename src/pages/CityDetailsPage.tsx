@@ -24,7 +24,6 @@ export const CityDetailsPage = () => {
   const temperatureUnit = useAppSelector(state => state.settings.temperatureUnit);
   const favorites = useAppSelector(state => state.favorites.cityIds);
 
-  // Check if it's a dynamic search city
   const isDynamicCity = cityId === 'search';
   const dynamicCityName = searchParams.get('name');
   const dynamicCityLat = searchParams.get('lat');
@@ -47,7 +46,6 @@ export const CityDetailsPage = () => {
         let data: WeatherData;
         
         if (isDynamicCity && dynamicCityLat && dynamicCityLon && dynamicCityName && dynamicCityCountry) {
-          // Load weather for dynamic search city
           const lat = parseFloat(dynamicCityLat);
           const lon = parseFloat(dynamicCityLon);
           
@@ -64,7 +62,6 @@ export const CityDetailsPage = () => {
           
           data = { current, forecast };
         } else {
-          // Load weather for default city
           data = await fetchWeatherData(cityId);
         }
         

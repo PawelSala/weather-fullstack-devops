@@ -20,7 +20,6 @@ export const SearchBar = ({
   const [isLoading, setIsLoading] = useState(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounce search
   useEffect(() => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
@@ -38,7 +37,7 @@ export const SearchBar = ({
       setSuggestions(results);
       setIsOpen(results.length > 0);
       setIsLoading(false);
-    }, 400); // 400ms debounce
+    }, 400);
 
     return () => {
       if (debounceTimerRef.current) {
@@ -66,7 +65,6 @@ export const SearchBar = ({
     onCitySelect?.(city);
   }, [onCitySelect]);
 
-  // Fallback to local city search if no API results
   const filteredLocalCities = useMemo(() => {
     if (suggestions.length > 0 || !query.trim()) return [];
     
@@ -100,7 +98,6 @@ export const SearchBar = ({
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg z-20 overflow-hidden">
-            {/* API Results */}
             {suggestions.map((suggestion, idx) => {
               const localizedName = getLocalizedCityName(suggestion);
               const showOriginalName = localizedName !== suggestion.name;
@@ -125,7 +122,6 @@ export const SearchBar = ({
               );
             })}
             
-            {/* Fallback Local Results */}
             {filteredLocalCities.map(city => (
               <button
                 key={city.id}
