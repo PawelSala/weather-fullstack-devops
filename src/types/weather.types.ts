@@ -76,5 +76,10 @@ export interface GeocodingResult {
   lon: number;
   country: string;
   state?: string;
+  local_names?: {
+    pl?: string;
+    en?: string;
+    [key: string]: string | undefined;
+  };
 }
 

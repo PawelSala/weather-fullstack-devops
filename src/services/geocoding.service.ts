@@ -4,6 +4,11 @@ import { API_CONFIG } from '../constants';
 
 const GEOCODING_BASE_URL = 'https://api.openweathermap.org/geo/1.0/direct';
 
+// Helper to get Polish city name with fallback
+export const getLocalizedCityName = (result: GeocodingResult): string => {
+  return result.local_names?.pl || result.name;
+};
+
 export const searchCitiesByName = async (query: string, limit: number = 5): Promise<GeocodingResult[]> => {
   const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
@@ -17,7 +22,8 @@ export const searchCitiesByName = async (query: string, limit: number = 5): Prom
       params: {
         q: query,
         limit,
-        appid: apiKey
+        appid: apiKey,
+        lang: 'pl'
       }
     });
 

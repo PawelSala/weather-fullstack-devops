@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Input } from '../common';
-import { searchCitiesByName } from '../../services/geocoding.service';
+import { searchCitiesByName, getLocalizedCityName } from '../../services/geocoding.service';
 import type { City, GeocodingResult } from '../../types';
 
 interface SearchBarProps {
@@ -53,7 +53,7 @@ export const SearchBar = ({
 
   const handleCityClick = useCallback((suggestion: GeocodingResult) => {
     const city = {
-      name: suggestion.name,
+      name: getLocalizedCityName(suggestion),
       country: suggestion.country,
       coordinates: {
         lat: suggestion.lat,
@@ -101,19 +101,29 @@ export const SearchBar = ({
           />
           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg z-20 overflow-hidden">
             {/* API Results */}
-            {suggestions.map((suggestion, idx) => (
-              <button
-                key={`${suggestion.name}-${suggestion.country}-${idx}`}
-                onClick={() => handleCityClick(suggestion)}
-                className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center justify-between"
-              >
-                <span className="font-medium text-gray-800">{suggestion.name}</span>
-                <div className="text-sm text-gray-500">
-                  <span>{suggestion.country}</span>
-                  {suggestion.state && <span className="ml-1">({suggestion.state})</span>}
-                </div>
-              </button>
-            ))}
+            {suggestions.map((suggestion, idx) => {
+              const localizedName = getLocalizedCityName(suggestion);
+              const showOriginalName = localizedName !== suggestion.name;
+              
+              return (
+                <button
+                  key={`${suggestion.name}-${suggestion.country}-${idx}`}
+                  onClick={() => handleCityClick(suggestion)}
+                  className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center justify-between"
+                >
+                  <div className="flex flex-col">
+                    <span className="font-medium text-gray-800">{localizedName}</span>
+                    {showOriginalName && (
+                      <span className="text-xs text-gray-400">{suggestion.name}</span>
+                    )}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    <span>{suggestion.country}</span>
+                    {suggestion.state && <span className="ml-1">({suggestion.state})</span>}
+                  </div>
+                </button>
+              );
+            })}
             
             {/* Fallback Local Results */}
             {filteredLocalCities.map(city => (
