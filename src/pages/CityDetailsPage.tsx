@@ -30,7 +30,20 @@ export const CityDetailsPage = () => {
   const dynamicCityLon = searchParams.get('lon');
   const dynamicCityCountry = searchParams.get('country');
 
-  const city = isDynamicCity ? null : DEFAULT_CITIES.find(c => c.id === cityId);
+  const city = isDynamicCity 
+    ? (dynamicCityName && dynamicCityLat && dynamicCityLon && dynamicCityCountry 
+        ? {
+            id: `${dynamicCityLat},${dynamicCityLon}`,
+            name: dynamicCityName,
+            country: dynamicCityCountry,
+            coordinates: {
+              lat: parseFloat(dynamicCityLat),
+              lon: parseFloat(dynamicCityLon)
+            }
+          }
+        : null)
+    : DEFAULT_CITIES.find(c => c.id === cityId);
+  
   const isFavorite = city ? favorites.includes(city.id) : false;
 
   useEffect(() => {
@@ -79,7 +92,7 @@ export const CityDetailsPage = () => {
 
   const handleToggleFavorite = () => {
     if (city) {
-      dispatch(toggleFavorite(city.id));
+      dispatch(toggleFavorite(city));
     }
   };
 

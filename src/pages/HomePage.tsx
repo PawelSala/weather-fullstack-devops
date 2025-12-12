@@ -4,8 +4,7 @@ import { CityCard, SearchBar } from '../components/weather';
 import { LoadingSpinner } from '../components/common';
 import { DEFAULT_CITIES } from '../constants';
 import { fetchWeatherData } from '../services';
-import { useAppSelector } from '../hooks/useRedux';
-import type { City, WeatherData } from '../types';
+import type { WeatherData } from '../types';
 
 interface SearchedCity {
   name: string;
@@ -15,7 +14,6 @@ interface SearchedCity {
 
 export const HomePage = () => {
   const navigate = useNavigate();
-  const temperatureUnit = useAppSelector(state => state.settings.temperatureUnit);
   const [weatherData, setWeatherData] = useState<Map<string, WeatherData>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchQuery] = useState('');
@@ -49,10 +47,6 @@ export const HomePage = () => {
       city.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }, [searchQuery]);
-
-  const handleCitySelect = useCallback((city: City) => {
-    navigate(`/city/${city.id}`);
-  }, [navigate]);
 
   const handleSearchedCitySelect = useCallback((city: SearchedCity) => {
     const searchParams = new URLSearchParams({

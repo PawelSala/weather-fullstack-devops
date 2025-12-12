@@ -22,16 +22,22 @@ export const CityCard = ({ city, temperature, condition, icon }: CityCardProps) 
     [favorites, city.id]
   );
 
+  const isDynamicCity = city.id.includes(',');
+
+  const cityUrl = isDynamicCity
+    ? `/city/search?name=${encodeURIComponent(city.name)}&lat=${city.coordinates.lat}&lon=${city.coordinates.lon}&country=${city.country}`
+    : `/city/${city.id}`;
+
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
-    dispatch(toggleFavorite(city.id));
+    dispatch(toggleFavorite(city));
   };
   
   const iconUrl = icon ? `https://openweathermap.org/img/wn/${icon}@2x.png` : null;
 
   return (
     <Link
-      to={`/city/${city.id}`}
+      to={cityUrl}
       className="block bg-white rounded-xl shadow-md hover:shadow-xl 
         transition-all duration-300 transform hover:-translate-y-1 p-6"
     >

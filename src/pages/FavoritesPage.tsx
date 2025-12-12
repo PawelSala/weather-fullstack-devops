@@ -1,22 +1,22 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../components/common';
 import { CityCard } from '../components/weather';
 import { LoadingSpinner } from '../components/common';
 import { useAppSelector } from '../hooks/useRedux';
-import { DEFAULT_CITIES } from '../constants';
 import { fetchWeatherData } from '../services';
-import type { WeatherData } from '../types';
+import { getWeatherByCoordinates } from '../services/geocoding.service';
+import { transformCurrentWeather, transformForecastData } from '../services/weatherTransform.service';
+import type { WeatherData, City } from '../types';
 
 export const FavoritesPage = () => {
-  const favorites = useAppSelector(state => state.favorites.cityIds);
+  const favoriteCities = useAppSelector(state => state.favorites.cities);
   const [weatherData, setWeatherData] = useState<Map<string, WeatherData>>(new Map());
   const [loading, setLoading] = useState(true);
 
-  const favoriteCities = useMemo(() => 
-    DEFAULT_CITIES.filter(city => favorites.includes(city.id)),
-    [favorites]
-  );
+  const isDynamicCity = (city: City) => {
+    return city.id.includes(',');
+  };
 
   useEffect(() => {
     const loadWeatherData = async () => {
@@ -27,9 +27,28 @@ export const FavoritesPage = () => {
 
       setLoading(true);
       try {
-        const promises = favoriteCities.map(city =>
-          fetchWeatherData(city.id).then(data => ({ cityId: city.id, data }))
-        );
+        const promises = favoriteCities.map(async (city) => {
+          if (isDynamicCity(city)) {
+            const weatherResponse = await getWeatherByCoordinates(
+              city.coordinates.lat,
+              city.coordinates.lon
+            );
+            
+            const current = transformCurrentWeather(
+              weatherResponse.current,
+              city.id,
+              city.name,
+              city.country
+            );
+            
+            const forecast = transformForecastData(weatherResponse.forecast);
+            
+            return { cityId: city.id, data: { current, forecast } };
+          } else {
+            const data = await fetchWeatherData(city.id);
+            return { cityId: city.id, data };
+          }
+        });
         
         const results = await Promise.all(promises);
         const newMap = new Map<string, WeatherData>();
