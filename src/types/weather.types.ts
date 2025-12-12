@@ -69,3 +69,12 @@ export interface City {
   country: string;
   coordinates: Coordinates;
 }
+
+export interface GeocodingResult {
+  name: string;
+  lat: number;
+  lon: number;
+  country: string;
+  state?: string;
+}
+

@@ -1,39 +1,79 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Input } from '../common';
-import type { City } from '../../types';
+import { searchCitiesByName } from '../../services/geocoding.service';
+import type { City, GeocodingResult } from '../../types';
 
 interface SearchBarProps {
-  cities: City[];
-  onCitySelect?: (city: City) => void;
+  cities?: City[];
+  onCitySelect?: (city: { name: string; country: string; coordinates: { lat: number; lon: number } }) => void;
   placeholder?: string;
 }
 
 export const SearchBar = ({ 
-  cities, 
+  cities = [],
   onCitySelect,
   placeholder = 'Szukaj miasta...' 
 }: SearchBarProps) => {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filteredCities = useMemo(() => {
-    if (!query.trim()) return [];
+  // Debounce search
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    if (!query.trim()) {
+      setSuggestions([]);
+      setIsOpen(false);
+      return;
+    }
+
+    setIsLoading(true);
+    debounceTimerRef.current = setTimeout(async () => {
+      const results = await searchCitiesByName(query, 5);
+      setSuggestions(results);
+      setIsOpen(results.length > 0);
+      setIsLoading(false);
+    }, 400); // 400ms debounce
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [query]);
+
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setQuery(e.target.value);
+  }, []);
+
+  const handleCityClick = useCallback((suggestion: GeocodingResult) => {
+    const city = {
+      name: suggestion.name,
+      country: suggestion.country,
+      coordinates: {
+        lat: suggestion.lat,
+        lon: suggestion.lon
+      }
+    };
+    setQuery('');
+    setIsOpen(false);
+    setSuggestions([]);
+    onCitySelect?.(city);
+  }, [onCitySelect]);
+
+  // Fallback to local city search if no API results
+  const filteredLocalCities = useMemo(() => {
+    if (suggestions.length > 0 || !query.trim()) return [];
     
     return cities.filter(city =>
       city.name.toLowerCase().includes(query.toLowerCase())
     ).slice(0, 5);
-  }, [cities, query]);
-
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(e.target.value);
-    setIsOpen(true);
-  }, []);
-
-  const handleCityClick = useCallback((city: City) => {
-    setQuery('');
-    setIsOpen(false);
-    onCitySelect?.(city);
-  }, [onCitySelect]);
+  }, [cities, query, suggestions]);
 
   return (
     <div className="relative w-full max-w-md">
@@ -41,25 +81,50 @@ export const SearchBar = ({
         type="text"
         value={query}
         onChange={handleInputChange}
-        onFocus={() => setIsOpen(true)}
+        onFocus={() => {
+          if (query.trim() && (suggestions.length > 0 || filteredLocalCities.length > 0)) {
+            setIsOpen(true);
+          }
+        }}
         placeholder={placeholder}
         className="pr-10"
       />
       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-        🔍
+        {isLoading ? '⏳' : '🔍'}
       </span>
 
-      {isOpen && filteredCities.length > 0 && (
+      {isOpen && (suggestions.length > 0 || filteredLocalCities.length > 0) && (
         <>
           <div 
             className="fixed inset-0 z-10" 
             onClick={() => setIsOpen(false)}
           />
           <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-lg z-20 overflow-hidden">
-            {filteredCities.map(city => (
+            {/* API Results */}
+            {suggestions.map((suggestion, idx) => (
+              <button
+                key={`${suggestion.name}-${suggestion.country}-${idx}`}
+                onClick={() => handleCityClick(suggestion)}
+                className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center justify-between"
+              >
+                <span className="font-medium text-gray-800">{suggestion.name}</span>
+                <div className="text-sm text-gray-500">
+                  <span>{suggestion.country}</span>
+                  {suggestion.state && <span className="ml-1">({suggestion.state})</span>}
+                </div>
+              </button>
+            ))}
+            
+            {/* Fallback Local Results */}
+            {filteredLocalCities.map(city => (
               <button
                 key={city.id}
-                onClick={() => handleCityClick(city)}
+                onClick={() => handleCityClick({
+                  name: city.name,
+                  lat: city.coordinates.lat,
+                  lon: city.coordinates.lon,
+                  country: city.country
+                })}
                 className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors flex items-center justify-between"
               >
                 <span className="font-medium text-gray-800">{city.name}</span>
@@ -72,3 +137,4 @@ export const SearchBar = ({
     </div>
   );
 };
+

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner, Button } from '../components/common';
 import { WeatherDetails, ForecastCard } from '../components/weather';
 import { fetchWeatherData } from '../services';
+import { getWeatherByCoordinates } from '../services/geocoding.service';
+import { transformCurrentWeather, transformForecastData } from '../services/weatherTransform.service';
 import { DEFAULT_CITIES } from '../constants';
 import { formatTemperature } from '../utils';
 import { useAppSelector, useAppDispatch } from '../hooks/useRedux';
@@ -11,6 +13,7 @@ import type { WeatherData } from '../types';
 
 export const CityDetailsPage = () => {
   const { cityId } = useParams<{ cityId: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
@@ -21,7 +24,14 @@ export const CityDetailsPage = () => {
   const temperatureUnit = useAppSelector(state => state.settings.temperatureUnit);
   const favorites = useAppSelector(state => state.favorites.cityIds);
 
-  const city = DEFAULT_CITIES.find(c => c.id === cityId);
+  // Check if it's a dynamic search city
+  const isDynamicCity = cityId === 'search';
+  const dynamicCityName = searchParams.get('name');
+  const dynamicCityLat = searchParams.get('lat');
+  const dynamicCityLon = searchParams.get('lon');
+  const dynamicCityCountry = searchParams.get('country');
+
+  const city = isDynamicCity ? null : DEFAULT_CITIES.find(c => c.id === cityId);
   const isFavorite = city ? favorites.includes(city.id) : false;
 
   useEffect(() => {
@@ -34,7 +44,30 @@ export const CityDetailsPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchWeatherData(cityId);
+        let data: WeatherData;
+        
+        if (isDynamicCity && dynamicCityLat && dynamicCityLon && dynamicCityName && dynamicCityCountry) {
+          // Load weather for dynamic search city
+          const lat = parseFloat(dynamicCityLat);
+          const lon = parseFloat(dynamicCityLon);
+          
+          const weatherResponse = await getWeatherByCoordinates(lat, lon);
+          
+          const current = transformCurrentWeather(
+            weatherResponse.current,
+            `search-${dynamicCityName}`,
+            dynamicCityName,
+            dynamicCityCountry
+          );
+          
+          const forecast = transformForecastData(weatherResponse.forecast);
+          
+          data = { current, forecast };
+        } else {
+          // Load weather for default city
+          data = await fetchWeatherData(cityId);
+        }
+        
         setWeatherData(data);
       } catch (err) {
         setError('Nie udało się załadować danych pogodowych');
@@ -45,7 +78,7 @@ export const CityDetailsPage = () => {
     };
 
     loadWeather();
-  }, [cityId, navigate]);
+  }, [cityId, isDynamicCity, dynamicCityLat, dynamicCityLon, dynamicCityName, dynamicCityCountry, navigate]);
 
   const handleToggleFavorite = () => {
     if (city) {
@@ -61,7 +94,7 @@ export const CityDetailsPage = () => {
     );
   }
 
-  if (error || !weatherData || !city) {
+  if (error || !weatherData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

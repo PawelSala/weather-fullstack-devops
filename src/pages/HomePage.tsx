@@ -7,6 +7,12 @@ import { fetchWeatherData } from '../services';
 import { useAppSelector } from '../hooks/useRedux';
 import type { City, WeatherData } from '../types';
 
+interface SearchedCity {
+  name: string;
+  country: string;
+  coordinates: { lat: number; lon: number };
+}
+
 export const HomePage = () => {
   const navigate = useNavigate();
   const temperatureUnit = useAppSelector(state => state.settings.temperatureUnit);
@@ -48,6 +54,17 @@ export const HomePage = () => {
     navigate(`/city/${city.id}`);
   }, [navigate]);
 
+  const handleSearchedCitySelect = useCallback((city: SearchedCity) => {
+    // Navigate to city details with query params for dynamic city
+    const searchParams = new URLSearchParams({
+      name: city.name,
+      lat: city.coordinates.lat.toString(),
+      lon: city.coordinates.lon.toString(),
+      country: city.country
+    });
+    navigate(`/city/search?${searchParams.toString()}`);
+  }, [navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -70,11 +87,10 @@ export const HomePage = () => {
       <div className="mb-8">
         <SearchBar
           cities={DEFAULT_CITIES}
-          onCitySelect={handleCitySelect}
+          onCitySelect={handleSearchedCitySelect}
           placeholder="Szukaj miasta..."
         />
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCities.map(city => {
           const data = weatherData.get(city.id);
