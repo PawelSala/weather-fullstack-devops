@@ -1,4 +1,4 @@
-# Weather App (Full Stack)
+# Weather App
 
 Kompletna aplikacja pogodowa typu Full Stack, składająca się z frontendu (React), backendu (Express) oraz bazy danych (PostgreSQL). System umożliwia wyszukiwanie pogody (OpenWeather API) oraz trwałe zapisywanie ulubionych lokalizacji.
 
