@@ -55,3 +55,16 @@ npm run build
    # Usuń ulubione miasto
    curl -X DELETE http://localhost:3000/api/favorites/warsaw
    ```
+
+## Run full stack (Docker)
+
+Uruchomienie całego systemu (baza danych + backend + frontend) w kontenerach:
+
+```bash
+docker compose up --build
+```
+
+Dostępne usługi:
+- Frontend: http://localhost:8080
+- Backend API: http://localhost:3000/api/health
+
