@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { CurrentWeather, DailyForecast } from '../types';
 
 export const transformCurrentWeather = (apiData: any, cityId: string, cityName: string, country: string): CurrentWeather => {
