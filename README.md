@@ -1,98 +1,174 @@
-# Projekt Monorepo
+# Weather App (Full Stack)
 
-To repozytorium zawiera kod źródłowy aplikacji (frontend oraz backend).
+Kompletna aplikacja pogodowa typu Full Stack, składająca się z frontendu (React), backendu (Express) oraz bazy danych (PostgreSQL). System umożliwia wyszukiwanie pogody (OpenWeather API) oraz trwałe zapisywanie ulubionych lokalizacji.
 
-## Struktura
+## Funkcje aplikacji
 
-- `frontend/` - Aplikacja kliencka (Vite + React + TS)
-- `backend/` - Backend aplikacji (Express + TS + Postgres)
+*   **Wyszukiwanie pogody**: Aktualne dane pogodowe dla dowolnego miasta.
+*   **Ulubione lokalizacje**: Dodawanie i usuwanie miast z listy ulubionych (trwały zapis w bazie danych).
+*   **Responsywność**: Dostosowany interfejs dla urządzeń mobilnych i desktopowych.
+*   **Architektura**: Podział na frontend i backend, komunikacja przez REST API.
+*   **Konteneryzacja**: Pełne środowisko uruchomieniowe w Dockerze.
 
-## Frontend
+## Tech Stack
 
-### Uruchomienie deweloperskie
+*   **Frontend**: React, TypeScript, Vite, Tailwind CSS, Redux Toolkit.
+*   **Backend**: Node.js, Express, TypeScript, `pg` (PostgreSQL client).
+*   **Baza danych**: PostgreSQL 16.
+*   **CI/CD**: GitHub Actions, GitHub Container Registry (GHCR).
+*   **Infrastruktura**: Docker, Docker Compose.
 
-```bash
-cd frontend
-npm ci
-npm run dev
-```
+## Struktura Repozytorium
 
-### Budowanie wersji produkcyjnej
+*   `frontend/` - Kod źródłowy aplikacji klienckiej.
+*   `backend/` - Kod źródłowy serwera API.
+*   `docker-compose.yml` - Definicja usług dla Docker Compose (DB, Backend, Frontend).
+*   `.github/` - Konfiguracja CI/CD (Workflowy i Custom Actions).
 
-```bash
-cd frontend
-npm ci
-npm run build
-```
+## Uruchomienie Lokalne
 
-## Local dev (DB + backend)
+### 1. Full Stack (Docker) - Zalecane
 
-1. Uruchom bazę danych:
-   ```bash
-   docker compose up -d
-   ```
-
-2. Uruchom backend:
-   ```bash
-   cd backend
-   npm ci
-   # Skopiuj przykładowy plik .env (lub ustaw zmienne środowiskowe ręcznie)
-   cp .env.example .env 
-   npm run dev
-   ```
-
-3. Testowanie API (curl):
-   ```bash
-   # Health check
-   curl http://localhost:3000/api/health
-
-   # Dodaj ulubione miasto
-   curl -X POST http://localhost:3000/api/favorites -H "Content-Type: application/json" -d "{\"cityId\":\"warsaw\",\"cityName\":\"Warsaw\",\"country\":\"PL\",\"lat\":52.2297,\"lon\":21.0122}"
-
-   # Pobierz listę ulubionych
-   curl http://localhost:3000/api/favorites
-
-   # Usuń ulubione miasto
-   curl -X DELETE http://localhost:3000/api/favorites/warsaw
-   ```
-
-## Run full stack (Docker)
-
-Uruchomienie całego systemu (baza danych + backend + frontend) w kontenerach:
+Najprostszy sposób na uruchomienie całego systemu.
 
 ```bash
 docker compose up --build
 ```
 
 Dostępne usługi:
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:3000/api/health
+*   **Frontend**: [http://localhost:8080](http://localhost:8080)
+*   **Backend API**: [http://localhost:3000/api/health](http://localhost:3000/api/health)
+*   **Baza danych**: `localhost:5432`
+
+### 2. Tryb Deweloperski (Bez Dockera)
+
+Wymaga zainstalowanego Node.js oraz działającej instancji PostgreSQL (np. z Dockera).
+
+**Baza danych:**
+```bash
+docker compose up -d db
+```
+
+**Backend:**
+```bash
+cd backend
+cp .env.example .env  # Upewnij się, że DATABASE_URL pasuje
+npm ci
+npm run dev
+```
+
+**Frontend:**
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+*Frontend będzie dostępny pod adresem wskazanym przez Vite (zazwyczaj http://localhost:5173).*
+
+## Konfiguracja ENV
+
+### Backend (`backend/.env`)
+
+```ini
+PORT=3000
+DATABASE_URL=postgres://app:app@localhost:5432/app
+```
+*W Dockerze `DATABASE_URL` jest nadpisywane automatycznie na host `db`.*
+
+### Frontend (`frontend/.env`)
+
+Jeśli aplikacja wymaga klucza API do OpenWeatherMap, należy go dodać w pliku `.env` (lub `.env.local`) we frontendzie:
+```ini
+VITE_OPENWEATHER_API_KEY=twoj_klucz_api
+```
+
+## Dokumentacja API Backend
+
+Serwer wystawia następujące endpointy REST:
+
+*   `GET /api/health`
+    *   Zwraca status serwera: `{ "ok": true }`
+*   `GET /api/favorites`
+    *   Zwraca listę ulubionych miast.
+*   `POST /api/favorites`
+    *   Dodaje miasto do ulubionych (Upsert).
+    *   **Body**:
+        ```json
+        {
+          "cityId": "warsaw",
+          "cityName": "Warsaw",
+          "country": "PL",
+          "lat": 52.2297,
+          "lon": 21.0122
+        }
+        ```
+*   `DELETE /api/favorites/:cityId`
+    *   Usuwa miasto z ulubionych na podstawie `cityId`.
+
+## Schemat Bazy Danych
+
+Tabela `favorites`:
+
+| Kolumna      | Typ              | Opis                                      |
+| :----------- | :--------------- | :---------------------------------------- |
+| `city_id`    | TEXT (PK)        | Unikalny identyfikator miasta (np. nazwa) |
+| `city_name`  | TEXT             | Wyświetlana nazwa miasta                  |
+| `country`    | TEXT             | Kod kraju                                 |
+| `lat`        | DOUBLE PRECISION | Szerokość geograficzna                    |
+| `lon`        | DOUBLE PRECISION | Długość geograficzna                      |
+| `created_at` | TIMESTAMPTZ      | Data dodania (domyślnie `NOW()`)          |
 
 ## CI/CD (GitHub Actions)
 
-Projekt wykorzystuje GitHub Actions do automatyzacji procesów CI/CD.
+Projekt posiada w pełni zautomatyzowany pipeline CI/CD.
 
 ### Workflowy
 
-1. **PR (`pr.yml`)**:
-   - Uruchamiany przy każdym Pull Request do gałęzi `main`.
-   - Wykonuje walidację kodu (lint, test, build) dla frontendu i backendu.
-   - Wykorzystuje reusable workflow `_ci.yml`.
+1.  **PR (`pr.yml`)**:
+    *   Uruchamiany na Pull Request do `main`.
+    *   Wywołuje reusable workflow `_ci.yml`.
+    *   Waliduje frontend i backend (lint, test, build).
+2.  **Main (`main.yml`)**:
+    *   Uruchamiany po merge'u do `main`.
+    *   Wywołuje reusable workflow `_ci.yml`.
+    *   Buduje obrazy Docker (multi-stage).
+    *   Publikuje obrazy do **GitHub Container Registry (GHCR)**.
 
-2. **Main (`main.yml`)**:
-   - Uruchamiany po zmergowaniu zmian do gałęzi `main`.
-   - Wykonuje walidację kodu (lint, test, build).
-   - Buduje obrazy Docker dla frontendu i backendu.
-   - Publikuje obrazy do GitHub Container Registry (GHCR).
+### Custom Action
 
-### Obrazy Docker
+Zdefiniowano własną akcję `.github/actions/node-ci/action.yml`, która:
+*   Ustawia środowisko Node.js.
+*   Obsługuje cache dla `npm`.
+*   Instaluje zależności (`npm ci`).
+*   Jest używana w obu workflowach (`_ci.yml`) dla zachowania spójności (DRY).
 
-Obrazy są dostępne w GitHub Packages repozytorium:
-- `ghcr.io/<user>/<repo>-frontend:latest`
-- `ghcr.io/<user>/<repo>-backend:latest`
+### Obrazy w GHCR
 
-### Custom Actions
+*   `ghcr.io/<user>/<repo>-frontend:latest`
+*   `ghcr.io/<user>/<repo>-backend:latest`
 
-W projekcie zdefiniowano własną akcję kompozytową `.github/actions/node-ci`, która standaryzuje konfigurację środowiska Node.js i instalację zależności.
+## Mapowanie Wymagań (Ocena)
+
+Realizacja wymagań projektowych:
+
+*   **[3.0]** Frontend w React/Vite, Backend w Express/TS, Baza PostgreSQL.
+*   **[3.5]** Konteneryzacja (Dockerfiles multi-stage, docker-compose dla całego stacka).
+*   **[4.0]** CI/CD: Dwa pipeline'y (PR i Main), budowanie obrazów Docker.
+*   **[4.5]** Publikacja obrazów do rejestru (GHCR), Reusable Workflow (`_ci.yml`).
+*   **[5.0]** Własna akcja GitHub Actions (`node-ci`), Stateful DB w Dockerze (wolumeny).
+
+## Troubleshooting
+
+1.  **Porty zajęte**: Upewnij się, że porty 8080, 3000 lub 5432 nie są zajęte przez inne procesy.
+2.  **Reset bazy danych**: Aby wyczyścić dane i zacząć od nowa:
+    ```bash
+    docker compose down -v
+    docker compose up --build
+    ```
+3.  **Błąd uprawnień GHCR**: Jeśli workflow `main` nie może wypchnąć obrazu, sprawdź czy w `main.yml` są uprawnienia:
+    ```yaml
+    permissions:
+      packages: write
+    ```
 
 
