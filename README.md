@@ -68,3 +68,31 @@ Dostępne usługi:
 - Frontend: http://localhost:8080
 - Backend API: http://localhost:3000/api/health
 
+## CI/CD (GitHub Actions)
+
+Projekt wykorzystuje GitHub Actions do automatyzacji procesów CI/CD.
+
+### Workflowy
+
+1. **PR (`pr.yml`)**:
+   - Uruchamiany przy każdym Pull Request do gałęzi `main`.
+   - Wykonuje walidację kodu (lint, test, build) dla frontendu i backendu.
+   - Wykorzystuje reusable workflow `_ci.yml`.
+
+2. **Main (`main.yml`)**:
+   - Uruchamiany po zmergowaniu zmian do gałęzi `main`.
+   - Wykonuje walidację kodu (lint, test, build).
+   - Buduje obrazy Docker dla frontendu i backendu.
+   - Publikuje obrazy do GitHub Container Registry (GHCR).
+
+### Obrazy Docker
+
+Obrazy są dostępne w GitHub Packages repozytorium:
+- `ghcr.io/<user>/<repo>-frontend:latest`
+- `ghcr.io/<user>/<repo>-backend:latest`
+
+### Custom Actions
+
+W projekcie zdefiniowano własną akcję kompozytową `.github/actions/node-ci`, która standaryzuje konfigurację środowiska Node.js i instalację zależności.
+
+
