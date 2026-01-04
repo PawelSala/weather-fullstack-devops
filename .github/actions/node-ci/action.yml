@@ -1,0 +1,15 @@
+name: "Node CI helper"
+description: "Sets up Node, caches npm, installs dependencies"
+inputs:
+  node-version:
+    description: "Node.js version"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: "npm"
+    - run: npm ci
+      shell: bash
