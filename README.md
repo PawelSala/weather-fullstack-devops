@@ -144,23 +144,17 @@ Zdefiniowano własną akcję `.github/actions/node-ci/action.yml`, która:
 
 ### Obrazy w GHCR
 
+Obrazy można znaleźć w zakładce **Packages** na stronie głównej repozytorium (GitHub → repo → Packages).
+
 *   `ghcr.io/<user>/<repo>-frontend:latest`
 *   `ghcr.io/<user>/<repo>-backend:latest`
 
-## Mapowanie Wymagań (Ocena)
-
-Realizacja wymagań projektowych:
-
-*   **[3.0]** Frontend w React/Vite, Backend w Express/TS, Baza PostgreSQL.
-*   **[3.5]** Konteneryzacja (Dockerfiles multi-stage, docker-compose dla całego stacka).
-*   **[4.0]** CI/CD: Dwa pipeline'y (PR i Main), budowanie obrazów Docker.
-*   **[4.5]** Publikacja obrazów do rejestru (GHCR), Reusable Workflow (`_ci.yml`).
-*   **[5.0]** Własna akcja GitHub Actions (`node-ci`), Stateful DB w Dockerze (wolumeny).
 
 ## Troubleshooting
 
-1.  **Porty zajęte**: Upewnij się, że porty 8080, 3000 lub 5432 nie są zajęte przez inne procesy.
-2.  **Reset bazy danych**: Aby wyczyścić dane i zacząć od nowa:
+1.  **Brak danych pogodowych**: Sprawdź czy zdefiniowano poprawny klucz `VITE_OPENWEATHER_API_KEY` w pliku `.env`.
+2.  **Porty zajęte**: Upewnij się, że porty 8080, 3000 lub 5432 nie są zajęte przez inne procesy.
+3.  **Reset bazy danych**: Aby wyczyścić dane i zacząć od nowa:
     ```bash
     docker compose down -v
     docker compose up --build
